@@ -40,6 +40,18 @@ void insertItem(struct hashTable* table,struct Item value){
         curr->next=new;
     }
 }
+void updateItem(struct hashTable* table,struct Item value){
+    int index=hashFunction(table,value.id);
+    struct node* curr=table->arr[index];
+    while(curr){
+        if(curr->key==value.id){
+            curr->value=value;
+            return;
+        }
+        curr=curr->next;
+    }
+    printf("Item with key %d not found for update\n",value.id);
+}
 int removeItem(struct hashTable* table,int key){
     int index=hashFunction(table,key);
     struct node* curr=table->arr[index];

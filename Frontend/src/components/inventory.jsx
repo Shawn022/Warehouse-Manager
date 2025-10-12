@@ -77,8 +77,32 @@ const Inventory = () => {
     }
   }
 
-  function updateItem(updated) {
-    setItems(prev => prev.map(i => (i.sku === updated.sku ? updated : i)))
+  async function updateItem(updated) {
+    try{
+      const res=await fetch('http://localhost:8080/updateItem',{
+        method:'POST',
+        mode:'cors',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(updated)
+      })
+      if(!res.ok)throw new Error(`HTTP ${res.status} ${res.statusText}`);
+      const data=await res.json();
+      setItems(prev => prev.map(i => i.sku ===updated.sku ? updated: i))
+    }
+    catch(err){
+      console.error('Update item Failed:',err);
+      setError(err.message || 'Update failed');
+      //reloading the items
+      setLoading(true)
+      try{
+        const r=await fetch('http://localhost:8080/inventory')
+        const data = await r.json()
+        setItems(data);
+      }
+      catch(e){
+        setError(e.message || 'Failed to refresh')
+      }
+    }
   }
 
   async function removeItem(id) {
