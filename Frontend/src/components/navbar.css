@@ -1,0 +1,38 @@
+.navbar {
+  margin: -10px;
+  position: absolute;
+  width: 23vw;
+  height: 100vh;
+  float: left;
+  display: flex;
+  flex-direction: column;
+  background-color: #e9f0ff;
+  padding: 1rem 2rem;
+  color: black;
+  box-sizing: border-box;
+}
+
+.navbar ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  margin: 10px 0;
+  padding: 0;
+  gap:5px;
+}
+
+.navbar ul li {
+  padding: 1rem 1rem;
+  border-radius: 10px;
+  font-size: 22px;
+  cursor: pointer;
+}
+.active {
+  background-color: rgb(100, 200, 100);
+}
+
+.navbar ul a {
+  border-radius: 10px;
+}
+
+

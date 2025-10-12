@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+.main{
+    margin-left: 22vw;
+    padding: 2rem;
+}

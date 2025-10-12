@@ -1,0 +1,84 @@
+# Node / frontend
+/node_modules/
+# Vite / build output
+/dist/
+/build/
+/.out/
+/.vite/
+.cache/
+.nyc_output/
+/coverage/
+
+# npm / yarn logs and lock debugging
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files (may contain secrets)
+.env
+.env.*.local
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln
+*.swp
+*.iml
+
+# Editor temp/history
+.history/
+*.log
+
+# Node test / report outputs
+/coverage
+/coverage/*
+/jest-cache/
+test-results/
+
+# Build artifacts and binaries (C backend)
+*.exe
+*.out
+*.o
+*.obj
+*.dll
+*.so
+*.dylib
+*.lib
+*.a
+
+# Project-specific backend build folder
+/backend/bin/
+/backend/build/
+/backend/*.exe
+
+# Generic build dirs
+/bin/
+/obj/
+/build/
+/dist/
+
+# Archives and packages
+*.zip
+*.tar.gz
+*.rar
+
+# Misc temporary
+*.tmp
+*.temp
+*.pid
+*.seed
+
+# Optional: lockfiles (usually keep these committed; uncomment to ignore)
+# package-lock.json
+# yarn.lock
