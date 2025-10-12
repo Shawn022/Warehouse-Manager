@@ -27,6 +27,7 @@ struct node* newnode(int key,struct Item value);
 struct hashTable* createTable(int size);
 int hashFunction(struct hashTable* table,int key);
 void insertItem(struct hashTable* table,struct Item value);
+void updateItem(struct hashTable* table,struct Item value);
 int removeItem(struct hashTable* table,int key);
 char* getInventoryJSON(struct hashTable* table);
 

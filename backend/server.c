@@ -128,6 +128,26 @@ void handle_post(SOCKET client, const char *path, const char *body, struct hashT
         }
         send_response(client, "{\"status\":\"Item Added\"}");
     }
+    else if(strcmp(path,"/updateitem")==0){
+        printf("POST body: %s\n",body);
+        struct Item updatedItem;
+        memset(&updatedItem, 0, sizeof(updatedItem));
+        updatedItem.id = 0;
+        updatedItem.quantity = 0;
+        updatedItem.price = 0.0f;
+        updatedItem.reorder = 0;
+
+        sscanf(body, "{\"id\":%d,\"sku\":\"%19[^\"]\",\"name\":\"%49[^\"]\",\"quantity\":%d,\"price\":%f,\"reorder\":%d}",
+               &updatedItem.id, updatedItem.sku, updatedItem.name, &updatedItem.quantity, &updatedItem.price, &updatedItem.reorder);
+
+        if (updatedItem.id <= 0) {
+            send_response(client, "{\"error\":\"Invalid or missing id for update\"}");
+            return;
+        }
+
+        updateItem(table, updatedItem);
+        send_response(client, "{\"status\":\"Item Updated\"}");
+    }
     else {
         send_response(client, "{\"error\":\"Invalid endpoint\"}");
     }
