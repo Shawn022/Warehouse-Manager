@@ -21,10 +21,11 @@ struct hashTable* createTable(int size){
     return temp;
 }
 int hashFunction(struct hashTable* table,int key){
-    while(key>10){
-        key=key/10;
-    }
-    return key;
+    if (!table || table->size <= 0) return 0;
+    // Use a simple modulo to distribute keys across table size
+    int idx = key % table->size;
+    if (idx < 0) idx += table->size;
+    return idx;
 }
 void insertItem(struct hashTable* table,struct Item value){
     int index=hashFunction(table,value.id);

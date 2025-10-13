@@ -25,6 +25,76 @@ char *strcasestr_local(const char *haystack, const char *needle) {
     return NULL;
 }
 
+// Helper: extract a quoted string value for key from a JSON-ish body.
+// Returns 1 on success (out filled), 0 on failure.
+int extract_json_string(const char *body, const char *key, char *out, size_t out_size) {
+    if (!body || !key || !out) return 0;
+    char keypat[64];
+    snprintf(keypat, sizeof(keypat), "\"%s\"", key);
+    char *k = strcasestr_local(body, keypat);
+    if (!k) return 0;
+    // find ':' after key
+    char *colon = strchr(k, ':');
+    if (!colon) return 0;
+    char *val = colon + 1;
+    // skip spaces
+    while (*val && isspace((unsigned char)*val)) val++;
+    // if starts with quote, copy until next quote
+    if (*val == '"') {
+        val++;
+        size_t i = 0;
+        while (*val && *val != '"' && i + 1 < out_size) {
+            out[i++] = *val++;
+        }
+        out[i] = '\0';
+        return 1;
+    } else {
+        // unquoted value: copy until comma or brace
+        size_t i = 0;
+        while (*val && *val != ',' && *val != '}' && !isspace((unsigned char)*val) && i + 1 < out_size) {
+            out[i++] = *val++;
+        }
+        out[i] = '\0';
+        return i > 0;
+    }
+}
+
+// Helper: extract integer value for key. Returns 1 on success and stores in *out, 0 otherwise.
+int extract_json_int(const char *body, const char *key, int *out) {
+    if (!body || !key || !out) return 0;
+    char keypat[64];
+    snprintf(keypat, sizeof(keypat), "\"%s\"", key);
+    char *k = strcasestr_local(body, keypat);
+    if (!k) return 0;
+    char *colon = strchr(k, ':');
+    if (!colon) return 0;
+    char *val = colon + 1;
+    while (*val && isspace((unsigned char)*val)) val++;
+    char *endptr = NULL;
+    long v = strtol(val, &endptr, 10);
+    if (val == endptr) return 0;
+    *out = (int)v;
+    return 1;
+}
+
+// Helper: extract float/double value for key. Returns 1 on success.
+int extract_json_float(const char *body, const char *key, float *out) {
+    if (!body || !key || !out) return 0;
+    char keypat[64];
+    snprintf(keypat, sizeof(keypat), "\"%s\"", key);
+    char *k = strcasestr_local(body, keypat);
+    if (!k) return 0;
+    char *colon = strchr(k, ':');
+    if (!colon) return 0;
+    char *val = colon + 1;
+    while (*val && isspace((unsigned char)*val)) val++;
+    char *endptr = NULL;
+    double v = strtod(val, &endptr);
+    if (val == endptr) return 0;
+    *out = (float)v;
+    return 1;
+}
+
 void send_response(SOCKET client, const char *json) {
     char response[8192];
     int content_len = (int)strlen(json);
@@ -89,19 +159,25 @@ void handle_post(SOCKET client, const char *path, const char *body, struct hashT
         else send_response(client, "{\"status\":\"Item not found\"}");
     }
     else if(strcmp(path,"/additem")==0){
-        printf("POST body: %s\n",body);
-        // parsing the JSON (simple sscanf - tolerant)
+        printf("POST body: %s\n", body);
         struct Item newItem;
-        // initialize to safe defaults
         memset(&newItem, 0, sizeof(newItem));
         newItem.id = 0;
         newItem.quantity = 0;
         newItem.price = 0.0f;
         newItem.reorder = 0;
 
-        // Try to extract fields if present. sscanf will skip missing optional fields but may not fill all.
-        sscanf(body, "{\"sku\":\"%19[^\"]\",\"name\":\"%49[^\"]\",\"quantity\":%d,\"price\":%f,\"reorder\":%d,\"id\":%d}",
-               newItem.sku, newItem.name, &newItem.quantity, &newItem.price, &newItem.reorder, &newItem.id);
+        // Extract string fields (sku, name, location optional)
+        extract_json_string(body, "sku", newItem.sku, sizeof(newItem.sku));
+        extract_json_string(body, "name", newItem.name, sizeof(newItem.name));
+        // If there's a location field, place it into name if provided (backwards-compatible)
+        // extract_json_string(body, "location", newItem.location, sizeof(newItem.location)); // not in struct currently
+
+        // Extract numeric fields if present
+        extract_json_int(body, "quantity", &newItem.quantity);
+        extract_json_int(body, "reorder", &newItem.reorder);
+        extract_json_int(body, "id", &newItem.id);
+        extract_json_float(body, "price", &newItem.price);
 
         // If the client didn't provide an id (or provided 0/negative), generate the next id by scanning the table
         if (newItem.id <= 0) {
@@ -116,11 +192,11 @@ void handle_post(SOCKET client, const char *path, const char *body, struct hashT
             newItem.id = maxid + 1;
         }
 
+        // Insert the item
         insertItem(table, newItem);
-        // Debug: print where the item was placed
+        // Debug: print where the item was placed and the chain
         int idx = hashFunction(table, newItem.id);
         printf("Inserted item id=%d sku=%s at index=%d\n", newItem.id, newItem.sku, idx);
-        // Optionally print the chain at that bucket
         struct node *n = table->arr[idx];
         while (n) {
             printf(" - node id=%d sku=%s\n", n->value.id, n->value.sku);

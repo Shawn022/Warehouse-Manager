@@ -142,7 +142,7 @@ const Inventory = () => {
     }
   }
 
-  if (loading) return <div>Loading inventory...</div>
+  if (loading) return <div className='loader'></div>
   if (error) return <div className="text-red-600">Error loading inventory: {error}</div>
 
   return (
