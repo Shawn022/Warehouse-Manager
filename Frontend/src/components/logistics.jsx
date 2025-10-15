@@ -67,6 +67,7 @@ const Logistics = () => {
                 <th className="py-2">Name</th>
                 <th className="py-2">Quantity</th>
                 <th className="py-2">Reorder Point</th>
+                <th className="py-2">Incoming</th>
                 <th className="py-2">Action</th>
               </tr>
             </thead>
@@ -77,6 +78,7 @@ const Logistics = () => {
                   <td className="py-2">{it.name}</td>
                   <td className="py-2">{it.quantity}</td>
                   <td className="py-2">{it.reorder}</td>
+                  <td className="py-2">{it.incoming}</td>
                   <td className="py-2">
                     <button className="bg-blue-500 text-white px-2 py-1 rounded">Create PO</button>
                   </td>

@@ -149,8 +149,8 @@ void handle_post(SOCKET client, const char *path, const char *body, struct hashT
     } 
     else if(strcmp(path, "/deleteitem") == 0) {
         printf("POST body: %s\n", body);
-        int key = 0; // Extract the key from the body
-        // Try to find a number in the body string
+        int key = 0; 
+       
         const char *p = body;
         while (*p && (*p < '0' || *p > '9') && *p != '-') p++;
         if (*p) key = (int)strtol(p, NULL, 10);
@@ -167,19 +167,14 @@ void handle_post(SOCKET client, const char *path, const char *body, struct hashT
         newItem.price = 0.0f;
         newItem.reorder = 0;
 
-        // Extract string fields (sku, name, location optional)
         extract_json_string(body, "sku", newItem.sku, sizeof(newItem.sku));
         extract_json_string(body, "name", newItem.name, sizeof(newItem.name));
-        // If there's a location field, place it into name if provided (backwards-compatible)
-        // extract_json_string(body, "location", newItem.location, sizeof(newItem.location)); // not in struct currently
 
-        // Extract numeric fields if present
         extract_json_int(body, "quantity", &newItem.quantity);
         extract_json_int(body, "reorder", &newItem.reorder);
         extract_json_int(body, "id", &newItem.id);
         extract_json_float(body, "price", &newItem.price);
 
-        // If the client didn't provide an id (or provided 0/negative), generate the next id by scanning the table
         if (newItem.id <= 0) {
             int maxid = 0;
             for (int i = 0; i < table->size; ++i) {
@@ -194,7 +189,7 @@ void handle_post(SOCKET client, const char *path, const char *body, struct hashT
 
         // Insert the item
         insertItem(table, newItem);
-        // Debug: print where the item was placed and the chain
+        
         int idx = hashFunction(table, newItem.id);
         printf("Inserted item id=%d sku=%s at index=%d\n", newItem.id, newItem.sku, idx);
         struct node *n = table->arr[idx];
