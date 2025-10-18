@@ -125,7 +125,7 @@ void send_options_response(SOCKET client) {
     if (len > 0) send(client, response, (int)len, 0);
 }
 
-void handle_get(SOCKET client, const char *path, struct hashTable* table) {
+void handle_get(SOCKET client, const char *path, struct hashTable* table, struct orderQueue* orderQ, struct reorderQueue* reorderQ) {
     if (strcmp(path, "/") == 0) {
         send_response(client, "{\"message\":\"Hello from root!\"}");
     } 
@@ -135,15 +135,22 @@ void handle_get(SOCKET client, const char *path, struct hashTable* table) {
         send_response(client, jsonStr);
         free(jsonStr);
     }
-    else if (strcmp(path, "/data") == 0) {
-        send_response(client, "{\"data\":[1,2,3,4]}");
+    else if (strcmp(path, "/orders") == 0) {
+        char* jsonStr = getOrderQueueJSON(orderQ);
+        send_response(client, jsonStr);
+        free(jsonStr);
+    }
+    else if (strcmp(path, "/reorders") == 0) {
+        char* jsonStr = getReorderQueueJSON(reorderQ);
+        send_response(client, jsonStr);
+        free(jsonStr);
     } 
     else {
         send_response(client, "{\"error\":\"Not Found\"}");
     }
 }
 
-void handle_post(SOCKET client, const char *path, const char *body, struct hashTable* table) {
+void handle_post(SOCKET client, const char *path, const char *body, struct hashTable* table, struct orderQueue* orderQ, struct reorderQueue* reorderQ) {
     if (strcmp(path, "/submit") == 0) {
         printf("POST body: %s\n", body);
         send_response(client, "{\"status\":\"Data received\"}");
@@ -257,51 +264,18 @@ int main() {
     struct reorderQueue* reorderQ=createReorderQueue();
 
         // ---- sample orders - enqueued at server start for testing (5 each) ----
-        struct Order o1 = { .priority = 3, .sku = 1001, .qty = 5 };
-        strncpy(o1.destination, "Dock A", sizeof(o1.destination)-1);
-        strncpy(o1.date, "2025-10-18", sizeof(o1.date)-1);
-        enqueueOrder(orderQ, o1);
+    struct Order o1 = {3, "1001", 5, "Dock A", "2025-10-18"}; enqueueOrder(orderQ, o1);
+    struct Order o2 = {2, "1002", 3, "Dock B", "2025-10-18"}; enqueueOrder(orderQ, o2);
+    struct Order o3 = {1, "2001", 10, "Outbound 1", "2025-10-19"}; enqueueOrder(orderQ, o3);
+    struct Order o4 = {3, "2002", 2, "Outbound 2", "2025-10-20"}; enqueueOrder(orderQ, o4);
+    struct Order o5 = {2, "3001", 1, "Retail", "2025-10-21"}; enqueueOrder(orderQ, o5);
 
-        struct Order o2 = { .priority = 2, .sku = 1002, .qty = 3 };
-        strncpy(o2.destination, "Dock B", sizeof(o2.destination)-1);
-        strncpy(o2.date, "2025-10-18", sizeof(o2.date)-1);
-        enqueueOrder(orderQ, o2);
-
-        struct Order o3 = { .priority = 1, .sku = 2001, .qty = 10 };
-        strncpy(o3.destination, "Outbound 1", sizeof(o3.destination)-1);
-        strncpy(o3.date, "2025-10-19", sizeof(o3.date)-1);
-        enqueueOrder(orderQ, o3);
-
-        struct Order o4 = { .priority = 3, .sku = 2002, .qty = 2 };
-        strncpy(o4.destination, "Outbound 2", sizeof(o4.destination)-1);
-        strncpy(o4.date, "2025-10-20", sizeof(o4.date)-1);
-        enqueueOrder(orderQ, o4);
-
-        struct Order o5 = { .priority = 2, .sku = 3001, .qty = 1 };
-        strncpy(o5.destination, "Retail", sizeof(o5.destination)-1);
-        strncpy(o5.date, "2025-10-21", sizeof(o5.date)-1);
-        enqueueOrder(orderQ, o5);
-
-        // sample reorders (priority-ordered) - 5 entries
-        struct Reorder r1 = { .priority = 3, .sku = 4001, .qty = 50, .eta = 7 };
-        strncpy(r1.date, "2025-10-25", sizeof(r1.date)-1);
-        enqueueReorder(reorderQ, r1);
-
-        struct Reorder r2 = { .priority = 3, .sku = 4002, .qty = 30, .eta = 10 };
-        strncpy(r2.date, "2025-10-26", sizeof(r2.date)-1);
-        enqueueReorder(reorderQ, r2);
-
-        struct Reorder r3 = { .priority = 2, .sku = 5001, .qty = 40, .eta = 14 };
-        strncpy(r3.date, "2025-11-01", sizeof(r3.date)-1);
-        enqueueReorder(reorderQ, r3);
-
-        struct Reorder r4 = { .priority = 2, .sku = 5002, .qty = 25, .eta = 21 };
-        strncpy(r4.date, "2025-11-08", sizeof(r4.date)-1);
-        enqueueReorder(reorderQ, r4);
-
-        struct Reorder r5 = { .priority = 1, .sku = 6001, .qty = 15, .eta = 30 };
-        strncpy(r5.date, "2025-11-20", sizeof(r5.date)-1);
-        enqueueReorder(reorderQ, r5);
+    // sample reorders (priority-ordered) - 5 entries
+    struct Reorder r1 = {3, "4001", 50, 7, "2025-10-25"}; enqueueReorder(reorderQ, r1);
+    struct Reorder r2 = {3, "4002", 30, 10, "2025-10-26"}; enqueueReorder(reorderQ, r2);
+    struct Reorder r3 = {2, "5001", 40, 14, "2025-11-01"}; enqueueReorder(reorderQ, r3);
+    struct Reorder r4 = {2, "5002", 25, 21, "2025-11-08"}; enqueueReorder(reorderQ, r4);
+    struct Reorder r5 = {1, "6001", 15, 30, "2025-11-20"}; enqueueReorder(reorderQ, r5);
 
 
     
@@ -373,9 +347,9 @@ int main() {
         if (body && body[0]) printf("Body (%d bytes): %.*s\n", body_bytes, body_bytes, body);
 
         if (strcmp(method, "GET") == 0) {
-            handle_get(client_socket, path_lower , table);
+            handle_get(client_socket, path_lower , table, orderQ, reorderQ);
         } else if (strcmp(method, "POST") == 0) {
-            handle_post(client_socket, path_lower, body, table);
+            handle_post(client_socket, path_lower, body, table, orderQ, reorderQ);
         } else if (strcmp(method, "OPTIONS") == 0) {
             send_options_response(client_socket);
         } else {

@@ -5,14 +5,14 @@
 
 struct Reorder{
     int priority;
-    int sku;
+    char sku[20];
     int qty;
     int eta;
     char date[25];
 };
 struct Order{
     int priority;
-    int sku;
+    char sku[20];
     int qty;
     char destination[100];
     char date[25];
