@@ -11,6 +11,8 @@ const smallCard = (title, value, note) => (
 const Logistics = () => {
   const [inventory, setInventory] = React.useState([]);
   const [loading, setLoading] = React.useState();
+  const [outgoingOrders, setOutgoingOrders] = React.useState([]);
+  const [restockOrders, setRestockOrders] = React.useState([]);
 
   React.useEffect(() => {
     const loadData = async () => {
@@ -25,6 +27,30 @@ const Logistics = () => {
         setLoading(false);
       }
     }
+    const loadOrders = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/orders')
+        if (!res.ok) throw new Error('Failed to load')
+        const data = await res.json()
+        setOutgoingOrders(data || [])
+        console.log(data)
+      } catch (err) {
+        console.error('Failed to load orders:', err)
+      }
+    }
+    const loadReorders = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/reorders')
+        if (!res.ok) throw new Error('Failed to load')
+        const data = await res.json()
+        setRestockOrders(data || [])
+      } catch (err) {
+        console.error('Failed to load reorders:', err)
+      }
+    }
+
+    loadOrders();
+    loadReorders();
     loadData();
   }, [])
 
@@ -33,8 +59,20 @@ const Logistics = () => {
     const totalSKUs = inventory.length
     const totalUnits = inventory.reduce((s, it) => s + (it.quantity || 0), 0)
     const lowStock = inventory.filter(it => (it.quantity ?? 0) <= (it.reorder ?? 0))
+    const incomingStock = restockOrders.reduce((s, order) => s + (order.qty || 0), 0) || 0
+    const incomingStockPrice= restockOrders.reduce((s, order) => {
+      const item = inventory.find(it => it.sku === order.sku)
+      return s + ((item?.price || 0) * (order.qty || 0))
+    }, 0) || 0
 
-    return { totalSKUs, totalUnits, lowStock }
+    const outgoingStock = outgoingOrders.reduce((s, order) => s + (order.qty || 0), 0) || 0
+    const outgoingStockPrice = outgoingOrders.reduce((s, order) => {
+      const item = inventory.find(it => it.sku === order.sku)
+      return s + ((item?.price || 0) * (order.qty || 0))
+    }, 0) || 0
+    const totalValue = inventory.reduce((s, it) => s + ((it.quantity || 0) * (it.price || 0)), 0)
+
+    return { totalSKUs, totalUnits, lowStock, incomingStock, outgoingStock, totalValue, incomingStockPrice, outgoingStockPrice }
   }, [inventory])
 
   if (loading) {
@@ -50,6 +88,9 @@ const Logistics = () => {
         {smallCard('Total SKUs', kpis.totalSKUs)}
         {smallCard('Total Units', kpis.totalUnits)}
         {smallCard('Low / Reorder', `${kpis.lowStock.length}`, 'Items at or below reorder point')}
+        {smallCard('Incoming Stock', `${kpis.incomingStock}`, `($${kpis.incomingStockPrice.toFixed(2)})`)}
+        {smallCard('Outgoing Stock', `${kpis.outgoingStock}`, `($${kpis.outgoingStockPrice.toFixed(2)})`)}
+        {smallCard('Total Inventory Value', `$${kpis.totalValue.toFixed(2)}`)}
       </div>
 
       <div className="mt-8">

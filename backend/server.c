@@ -264,18 +264,18 @@ int main() {
     struct reorderQueue* reorderQ=createReorderQueue();
 
         // ---- sample orders - enqueued at server start for testing (5 each) ----
-    struct Order o1 = {3, "A-101", 5, "Dock A", "2025-10-18"}; enqueueOrder(orderQ, o1);
-    struct Order o2 = {2, "B-102", 3, "Dock B", "2025-10-18"}; enqueueOrder(orderQ, o2);
-    struct Order o3 = {1, "C-103", 10, "Outbound 1", "2025-10-19"}; enqueueOrder(orderQ, o3);
-    struct Order o4 = {3, "C-104", 2, "Outbound 2", "2025-10-20"}; enqueueOrder(orderQ, o4);
-    struct Order o5 = {2, "C-105", 1, "Retail", "2025-10-21"}; enqueueOrder(orderQ, o5);
+    struct Order o1 = {3, "A-100", 5, "Dock A", "2025-10-18"}; enqueueOrder(orderQ, o1);
+    struct Order o2 = {2, "B-200", 3, "Dock B", "2025-10-18"}; enqueueOrder(orderQ, o2);
+    struct Order o3 = {1, "C-300", 10, "Outbound 1", "2025-10-19"}; enqueueOrder(orderQ, o3);
+    struct Order o4 = {3, "C-300", 2, "Outbound 2", "2025-10-20"}; enqueueOrder(orderQ, o4);
+    struct Order o5 = {2, "C-300", 1, "Retail", "2025-10-21"}; enqueueOrder(orderQ, o5);
 
     // sample reorders (priority-ordered) - 5 entries
-    struct Reorder r1 = {3, "A-101", 50, 7, "2025-10-25"}; enqueueReorder(reorderQ, r1);
-    struct Reorder r2 = {3, "A-102", 30, 10, "2025-10-26"}; enqueueReorder(reorderQ, r2);
-    struct Reorder r3 = {2, "B-101", 40, 14, "2025-11-01"}; enqueueReorder(reorderQ, r3);
-    struct Reorder r4 = {2, "B-102", 25, 21, "2025-11-08"}; enqueueReorder(reorderQ, r4);
-    struct Reorder r5 = {1, "C-101", 15, 30, "2025-11-20"}; enqueueReorder(reorderQ, r5);
+    struct Reorder r1 = {3, "A-100", 50, 7, "2025-10-25"}; enqueueReorder(reorderQ, r1);
+    struct Reorder r2 = {3, "A-100", 30, 10, "2025-10-26"}; enqueueReorder(reorderQ, r2);
+    struct Reorder r3 = {2, "B-200", 40, 14, "2025-11-01"}; enqueueReorder(reorderQ, r3);
+    struct Reorder r4 = {2, "B-200", 25, 21, "2025-11-08"}; enqueueReorder(reorderQ, r4);
+    struct Reorder r5 = {1, "C-300", 15, 30, "2025-11-20"}; enqueueReorder(reorderQ, r5);
 
 
     

@@ -114,7 +114,7 @@ const Orders = () => {
               {outgoingOrders.length === 0 ? (
                 <p className="mt-2 text-gray-500">No outgoing orders yet.</p>
               ) : (
-                <ul className="mt-3 space-y-2">
+                <ul className="mt-3 space-y-2 overflow-scroll" style={{maxHeight: '350px'}}>
                   {outgoingOrders.map((o, index) => (
                     <li key={index} className="p-3 bg-white rounded shadow-sm flex justify-between">
                       <div>
