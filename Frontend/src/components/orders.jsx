@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react'
 const Orders = () => {
   const [tab, setTab] = useState('restock')
   const [items, setItems] = useState([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const maxLimit = 200; //max SKUs in one division
+  const Priorities=["","Low","Medium","High"]
 
   const [restockOrders, setRestockOrders] = useState([])
   const [outgoingOrders, setOutgoingOrders] = useState([])
@@ -14,55 +15,56 @@ const Orders = () => {
 
 
   useEffect(() => {
-    let mounted = true
     setLoading(true)
-    const load = async () => {
+    const loaditems = async () => {
       try {
         const res = await fetch('http://localhost:8080/inventory')
         if (!res.ok) throw new Error('Failed to load')
         const data = await res.json()
-        if (mounted) {
-          setItems(data)
-          setRestockForm({ sku: data[0]?.sku || '', qty: 0, etaDays: 7 })
-          setOutgoingForm({ sku: data[0]?.sku || '', qty: 0, destination: '' })
-        }
+
+        setItems(data)
+        setRestockForm({ sku: data[0]?.sku || '', qty: 0, etaDays: 7 })
+        setOutgoingForm({ sku: data[0]?.sku || '', qty: 0, destination: '' })
       } catch (err) {
         console.error('Failed to load items for map:', err)
       }
     }
-    load()
+    const loadOrders = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/orders')
+        if (!res.ok) throw new Error('Failed to load')
+        const data = await res.json()
+        setOutgoingOrders(data || [])
+        console.log(data)
+      } catch (err) {
+        console.error('Failed to load orders:', err)
+      }
+    }
+    const loadReorders = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/reorders')
+        if (!res.ok) throw new Error('Failed to load')
+        const data = await res.json()
+        setRestockOrders(data || [])
+      } catch (err) {
+        console.error('Failed to load reorders:', err)
+      }
+    }
+
+    loaditems()
+    loadOrders()
+    loadReorders()
     setLoading(false)
-    return () => { mounted = false }
   }, [])
 
 
 
   function createRestock(e) {
-    e.preventDefault()
-    const order = {
-      id: `PO-${Date.now()}`,
-      sku: restockForm.sku,
-      qty: Number(restockForm.qty),
-      etaDays: Number(restockForm.etaDays),
-      status: 'Pending',
-      createdAt: new Date().toISOString(),
-    }
-    setRestockOrders(prev => [order, ...prev])
-    setRestockForm({ ...restockForm, qty: 50 })
+
   }
 
   function createOutgoing(e) {
-    e.preventDefault()
-    const order = {
-      id: `SO-${Date.now()}`,
-      sku: outgoingForm.sku,
-      qty: Number(outgoingForm.qty),
-      destination: outgoingForm.destination,
-      status: 'Created',
-      createdAt: new Date().toISOString(),
-    }
-    setOutgoingOrders(prev => [order, ...prev])
-    setOutgoingForm({ ...outgoingForm, qty: 10, destination: '' })
+
   }
 
   function skuLimit(currSku) {
@@ -80,11 +82,53 @@ const Orders = () => {
 
       <div className="mt-6">
         <div className="flex gap-2">
-          <button className={`px-3 py-1 rounded ${tab === 'restock' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`} onClick={() => setTab('restock')}>Restock Orders</button>
           <button className={`px-3 py-1 rounded ${tab === 'outgoing' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`} onClick={() => setTab('outgoing')}>Outgoing Orders</button>
+          <button className={`px-3 py-1 rounded ${tab === 'restock' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`} onClick={() => setTab('restock')}>Restock Orders</button>
           <button className="px-3 py-1 rounded bg-green-600 text-white" onClick={() => setTab('new-item')}>Add New Item</button>
         </div>
 
+        {tab === 'outgoing' && (
+          <div className="mt-4">
+            <form onSubmit={createOutgoing} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+              <div>
+                <label className="block text-sm">SKU</label>
+                <select value={outgoingForm.sku} onChange={e => setOutgoingForm({ ...outgoingForm, sku: e.target.value })} className="p-2 border rounded">
+                  {items.map(s => <option key={s.sku} value={s.sku}>{s.sku} — {s.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm">Qty</label>
+                <input type="number" value={outgoingForm.qty} min={1} max={items.find(item => item.sku === outgoingForm.sku)?.quantity || 0} onChange={e => setOutgoingForm({ ...outgoingForm, qty: e.target.value })} className="p-2 border rounded" />
+              </div>
+              <div>
+                <label className="block text-sm">Destination</label>
+                <input type="text" value={outgoingForm.destination} onChange={e => setOutgoingForm({ ...outgoingForm, destination: e.target.value })} className="p-2 border rounded" />
+              </div>
+              <div>
+                <button className="bg-blue-600 text-white px-4 py-2 rounded">Create Outgoing</button>
+              </div>
+            </form>
+
+            <div className="mt-6">
+              <h3 className="text-2xl font-semibold">Outgoing Orders</h3>
+              {outgoingOrders.length === 0 ? (
+                <p className="mt-2 text-gray-500">No outgoing orders yet.</p>
+              ) : (
+                <ul className="mt-3 space-y-2">
+                  {outgoingOrders.map((o, index) => (
+                    <li key={index} className="p-3 bg-white rounded shadow-sm flex justify-between">
+                      <div>
+                        <div className="font-medium">{o.sku}</div>
+                        <div className="text-sm text-gray-500">Qty: {o.qty} • Destination: {o.destination} • Status: {o.status}</div>
+                      </div>
+                      <div className="text-sm text-gray-400">{o.date}</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
         {tab === 'restock' && (
           <div className="mt-4">
             <form onSubmit={createRestock} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
@@ -108,60 +152,18 @@ const Orders = () => {
             </form>
 
             <div className="mt-6">
-              <h3 className="text-2xl font-semibold">Recent Restock Orders</h3>
+              <h3 className="text-2xl font-semibold">Restock Orders</h3>
               {restockOrders.length === 0 ? (
                 <p className="mt-2 text-gray-500">No restock orders yet.</p>
               ) : (
-                <ul className="mt-3 space-y-2">
-                  {restockOrders.map(o => (
-                    <li key={o.id} className="p-3 bg-white rounded shadow-sm flex justify-between">
+                <ul className="mt-3 space-y-2 overflow-scroll" style={{maxHeight: '350px'}}>
+                  {restockOrders.map((o, index) => (
+                    <li key={index} className="p-3 bg-white rounded shadow-sm flex justify-between">
                       <div>
-                        <div className="font-medium">{o.id} — {o.sku}</div>
-                        <div className="text-sm text-gray-500">Qty: {o.qty} • ETA: {o.etaDays} days • Status: {o.status}</div>
+                        <div className="font-medium">{o.sku}</div>
+                        <div className="text-sm text-gray-500">Qty: {o.qty} • ETA: {o.eta} days • Priority: {Priorities[o.priority]}</div>
                       </div>
-                      <div className="text-sm text-gray-400">{new Date(o.createdAt).toLocaleString()}</div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        )}
-        {tab === 'outgoing' && (
-          <div className="mt-4">
-            <form onSubmit={createOutgoing} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-              <div>
-                <label className="block text-sm">SKU</label>
-                <select value={outgoingForm.sku} onChange={e => setOutgoingForm({ ...outgoingForm, sku: e.target.value })} className="p-2 border rounded">
-                  {items.map(s => <option key={s.sku} value={s.sku}>{s.sku} — {s.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm">Qty</label>
-                <input type="number" value={outgoingForm.qty} min={1} onChange={e => setOutgoingForm({ ...outgoingForm, qty: e.target.value })} className="p-2 border rounded" />
-              </div>
-              <div>
-                <label className="block text-sm">Destination</label>
-                <input type="text" value={outgoingForm.destination} onChange={e => setOutgoingForm({ ...outgoingForm, destination: e.target.value })} className="p-2 border rounded" />
-              </div>
-              <div>
-                <button className="bg-blue-600 text-white px-4 py-2 rounded">Create Outgoing</button>
-              </div>
-            </form>
-
-            <div className="mt-6">
-              <h3 className="text-2xl font-semibold">Recent Outgoing Orders</h3>
-              {outgoingOrders.length === 0 ? (
-                <p className="mt-2 text-gray-500">No outgoing orders yet.</p>
-              ) : (
-                <ul className="mt-3 space-y-2">
-                  {outgoingOrders.map(o => (
-                    <li key={o.id} className="p-3 bg-white rounded shadow-sm flex justify-between">
-                      <div>
-                        <div className="font-medium">{o.id} — {o.sku}</div>
-                        <div className="text-sm text-gray-500">Qty: {o.qty} • Destination: {o.destination} • Status: {o.status}</div>
-                      </div>
-                      <div className="text-sm text-gray-400">{new Date(o.createdAt).toLocaleString()}</div>
+                      <div className="text-sm text-gray-400">{o.date}</div>
                     </li>
                   ))}
                 </ul>

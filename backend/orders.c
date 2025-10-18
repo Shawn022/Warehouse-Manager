@@ -51,16 +51,16 @@ void dequeueOrder(struct orderQueue* q){
 char* getOrderQueueJSON(struct orderQueue* q){
     if(!q->front){
         char* emptyJson=(char*)malloc(20*sizeof(char));
-        strcpy(emptyJson,"{\"orders\":[]}");
+        strcpy(emptyJson,"[]");
         return emptyJson;
     }
     char* jsonStr=(char*)malloc(1024*sizeof(char));
-    strcpy(jsonStr,"{\"orders\":[");
+    strcpy(jsonStr,"[");
     struct orderQueueNode* curr=q->front;
     while(curr){
         char orderEntry[256];
         snprintf(orderEntry,sizeof(orderEntry),
-                 "{\"priority\":%d,\"sku\":%d,\"qty\":%d,\"destination\":\"%s\",\"date\":\"%s\"}",
+                 "{\"priority\":%d,\"sku\":\"%s\",\"qty\":%d,\"destination\":\"%s\",\"date\":\"%s\"}",
                  curr->order.priority,
                  curr->order.sku,
                  curr->order.qty,
@@ -72,7 +72,7 @@ char* getOrderQueueJSON(struct orderQueue* q){
         }
         curr=curr->next;
     }
-    strcat(jsonStr,"]}");
+    strcat(jsonStr,"]");
     return jsonStr;
 }
     
@@ -128,16 +128,16 @@ void dequeueReorder(struct reorderQueue* q){
 char* getReorderQueueJSON(struct reorderQueue* q){
     if(!q->front){
         char* emptyJson=(char*)malloc(20*sizeof(char));
-        strcpy(emptyJson,"{\"reorders\":[]}");
+        strcpy(emptyJson,"[]");
         return emptyJson;
     }
     char* jsonStr=(char*)malloc(1024*sizeof(char));
-    strcpy(jsonStr,"{\"reorders\":[");
+    strcpy(jsonStr,"[");
     struct reorderQueueNode* curr=q->front;
     while(curr){
         char reorderEntry[256];
         snprintf(reorderEntry,sizeof(reorderEntry),
-                 "{\"priority\":%d,\"sku\":%d,\"qty\":%d,\"eta\":%d,\"date\":\"%s\"}",
+                 "{\"priority\":%d,\"sku\":\"%s\",\"qty\":%d,\"eta\":%d,\"date\":\"%s\"}",
                  curr->reorder.priority,
                  curr->reorder.sku,
                  curr->reorder.qty,
@@ -149,6 +149,6 @@ char* getReorderQueueJSON(struct reorderQueue* q){
         }
         curr=curr->next;
     }
-    strcat(jsonStr,"]}");
+    strcat(jsonStr,"]");
     return jsonStr;
 }
