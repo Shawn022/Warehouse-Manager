@@ -4,6 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "inventory.h"
+#include "orders.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -251,6 +252,59 @@ int main() {
         insertItem(table,item1);
         insertItem(table,item2);
         insertItem(table,item3);
+
+    struct orderQueue* orderQ=createOrderQueue();
+    struct reorderQueue* reorderQ=createReorderQueue();
+
+        // ---- sample orders - enqueued at server start for testing (5 each) ----
+        struct Order o1 = { .priority = 3, .sku = 1001, .qty = 5 };
+        strncpy(o1.destination, "Dock A", sizeof(o1.destination)-1);
+        strncpy(o1.date, "2025-10-18", sizeof(o1.date)-1);
+        enqueueOrder(orderQ, o1);
+
+        struct Order o2 = { .priority = 2, .sku = 1002, .qty = 3 };
+        strncpy(o2.destination, "Dock B", sizeof(o2.destination)-1);
+        strncpy(o2.date, "2025-10-18", sizeof(o2.date)-1);
+        enqueueOrder(orderQ, o2);
+
+        struct Order o3 = { .priority = 1, .sku = 2001, .qty = 10 };
+        strncpy(o3.destination, "Outbound 1", sizeof(o3.destination)-1);
+        strncpy(o3.date, "2025-10-19", sizeof(o3.date)-1);
+        enqueueOrder(orderQ, o3);
+
+        struct Order o4 = { .priority = 3, .sku = 2002, .qty = 2 };
+        strncpy(o4.destination, "Outbound 2", sizeof(o4.destination)-1);
+        strncpy(o4.date, "2025-10-20", sizeof(o4.date)-1);
+        enqueueOrder(orderQ, o4);
+
+        struct Order o5 = { .priority = 2, .sku = 3001, .qty = 1 };
+        strncpy(o5.destination, "Retail", sizeof(o5.destination)-1);
+        strncpy(o5.date, "2025-10-21", sizeof(o5.date)-1);
+        enqueueOrder(orderQ, o5);
+
+        // sample reorders (priority-ordered) - 5 entries
+        struct Reorder r1 = { .priority = 3, .sku = 4001, .qty = 50, .eta = 7 };
+        strncpy(r1.date, "2025-10-25", sizeof(r1.date)-1);
+        enqueueReorder(reorderQ, r1);
+
+        struct Reorder r2 = { .priority = 3, .sku = 4002, .qty = 30, .eta = 10 };
+        strncpy(r2.date, "2025-10-26", sizeof(r2.date)-1);
+        enqueueReorder(reorderQ, r2);
+
+        struct Reorder r3 = { .priority = 2, .sku = 5001, .qty = 40, .eta = 14 };
+        strncpy(r3.date, "2025-11-01", sizeof(r3.date)-1);
+        enqueueReorder(reorderQ, r3);
+
+        struct Reorder r4 = { .priority = 2, .sku = 5002, .qty = 25, .eta = 21 };
+        strncpy(r4.date, "2025-11-08", sizeof(r4.date)-1);
+        enqueueReorder(reorderQ, r4);
+
+        struct Reorder r5 = { .priority = 1, .sku = 6001, .qty = 15, .eta = 30 };
+        strncpy(r5.date, "2025-11-20", sizeof(r5.date)-1);
+        enqueueReorder(reorderQ, r5);
+
+
+    
 
 
     while (1) {

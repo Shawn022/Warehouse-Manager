@@ -1,8 +1,5 @@
 import React, { useMemo } from 'react'
 
-// Mock inventory data — replace with real API/store as needed
-
-
 const smallCard = (title, value, note) => (
   <div className="p-4 bg-white rounded-lg shadow-sm">
     <div className="text-sm text-gray-500">{title}</div>
