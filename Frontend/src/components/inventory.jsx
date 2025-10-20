@@ -19,6 +19,7 @@ const Inventory = () => {
   const [error, setError] = useState(null)
   const [query, setQuery] = useState('')
   const [editing, setEditing] = useState(null) // item being edited
+  const maxLimit = 200; //max items in one division
 
   useEffect(() => {
     let mounted = true
@@ -49,57 +50,57 @@ const Inventory = () => {
   async function addItem(item) {
     //setItems(prev => [{ ...item }, ...prev])
     item.id = Number(item.sku.split('-')[1]);
-    try{
-      const res= await fetch('http://localhost:8080/addItem',{
-        method:'POST',
-        mode:'cors',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(item)
+    try {
+      const res = await fetch('http://localhost:8080/addItem', {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item)
       })
-      if(!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-      const data= await res.json()
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+      const data = await res.json()
       //setItems(prev => [{ ...item }, ...prev])
-      try{
+      try {
         setLoading(true)
-        const r=await fetch('http://localhost:8080/inventory')
+        const r = await fetch('http://localhost:8080/inventory')
         const data = await r.json()
         setItems(data);
         setLoading(false)
       }
-      catch(e){
+      catch (e) {
         setError(e.message || 'Failed to refresh')
-      } 
+      }
     }
-    catch(err){
-      console.error('Add item failed:',err);
+    catch (err) {
+      console.error('Add item failed:', err);
       //reloading the items
-      
+
     }
   }
 
   async function updateItem(updated) {
-    try{
-      const res=await fetch('http://localhost:8080/updateItem',{
-        method:'POST',
-        mode:'cors',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(updated)
+    try {
+      const res = await fetch('http://localhost:8080/updateItem', {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated)
       })
-      if(!res.ok)throw new Error(`HTTP ${res.status} ${res.statusText}`);
-      const data=await res.json();
-      setItems(prev => prev.map(i => i.sku ===updated.sku ? updated: i))
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+      const data = await res.json();
+      setItems(prev => prev.map(i => i.sku === updated.sku ? updated : i))
     }
-    catch(err){
-      console.error('Update item Failed:',err);
+    catch (err) {
+      console.error('Update item Failed:', err);
       setError(err.message || 'Update failed');
       //reloading the items
       setLoading(true)
-      try{
-        const r=await fetch('http://localhost:8080/inventory')
+      try {
+        const r = await fetch('http://localhost:8080/inventory')
         const data = await r.json()
         setItems(data);
       }
-      catch(e){
+      catch (e) {
         setError(e.message || 'Failed to refresh')
       }
     }

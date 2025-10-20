@@ -30,7 +30,9 @@
 .active {
   background-color: rgb(100, 200, 100);
 }
-
+.navbar ul li:hover{
+  border:1px solid black;
+}
 .navbar ul a {
   border-radius: 10px;
 }
