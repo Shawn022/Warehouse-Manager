@@ -1,29 +1,80 @@
-import React, { useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 
-// Small mock datasets — these should be replaced/wired to your store or APIs
-const sampleInventory = [
-  { sku: 'A-100', name: 'Widget A', quantity: 120, reorderPoint: 50 },
-  { sku: 'B-200', name: 'Widget B', quantity: 8, reorderPoint: 20 },
-  { sku: 'C-300', name: 'Gadget C', quantity: 45, reorderPoint: 40 },
-]
+const smallCard = (title, value, note) => (
+  <div className="p-4 bg-white rounded-lg shadow-sm">
+    <div className="text-sm text-gray-500">{title}</div>
+    <div className="text-2xl font-bold">{value}</div>
+    {note && <div className="text-xs text-gray-400">{note}</div>}
+  </div>
+)
 
-const sampleOrders = [
-  { id: 'PO-1', type: 'restock', sku: 'A-100', qty: 100, status: 'Pending', createdAt: new Date().toISOString() },
-  { id: 'SO-1', type: 'outgoing', sku: 'E-500', qty: 20, status: 'Shipped', createdAt: new Date().toISOString() },
-]
+  const Priorities = ["", "Low", "Medium", "High"]
 
-const Dashboard = ({ inventory = sampleInventory, orders = sampleOrders }) => {
+
+const Dashboard = () => {
+  const [inventory, setInventory] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const [restockOrders, setRestockOrders] = useState([])
+  const [outgoingOrders, setOutgoingOrders] = useState([])
+
+  useEffect(() => {
+    setLoading(true)
+
+    loadinventory()
+    loadOrders()
+    loadReorders()
+
+    setLoading(false)
+  }, [])
+
+  const loadinventory = async () => {
+  try {
+    const res = await fetch('http://localhost:8080/inventory')
+    if (!res.ok) throw new Error('Failed to load')
+    const data = await res.json()
+
+    setInventory(data)
+  } catch (err) {
+    console.error('Failed to load items for map:', err)
+  }
+}
+const loadOrders = async () => {
+  try {
+    const res = await fetch('http://localhost:8080/orders')
+    if (!res.ok) throw new Error('Failed to load')
+    const data = await res.json()
+    setOutgoingOrders(data || [])
+  } catch (err) {
+    console.error('Failed to load orders:', err)
+  }
+}
+const loadReorders = async () => {
+  try {
+    const res = await fetch('http://localhost:8080/reorders')
+    if (!res.ok) throw new Error('Failed to load')
+    const data = await res.json()
+    setRestockOrders(data || [])
+  } catch (err) {
+    console.error('Failed to load reorders:', err)
+  }
+}
+
+
   const kpis = useMemo(() => {
     const totalSKUs = inventory.length
     const totalUnits = inventory.reduce((s, i) => s + (i.quantity || 0), 0)
-    const lowStock = inventory.filter(i => (i.quantity ?? 0) <= (i.reorderPoint ?? 0)).length
-    const pendingPOs = orders.filter(o => o.type === 'restock' && o.status === 'Pending').length
+    const lowStock = inventory.filter(i => (i.quantity ?? 0) <= (i.reorder ?? 0)).length
+    const pendingPOs = restockOrders.length
     return { totalSKUs, totalUnits, lowStock, pendingPOs }
-  }, [inventory, orders])
+  }, [inventory, restockOrders])
+ 
+  if(loading) return <div className='loader'></div> 
 
   return (
     <div>
+
       <div className="flex items-center justify-between">
         <h1 className="text-4xl font-bold">Dashboard</h1>
         <div className="text-sm text-gray-500">Overview</div>
@@ -50,18 +101,18 @@ const Dashboard = ({ inventory = sampleInventory, orders = sampleOrders }) => {
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="col-span-2 bg-white p-4 rounded shadow-sm">
-          <h3 className="text-xl font-semibold">Recent Orders</h3>
-          {orders.length === 0 ? (
-            <p className="mt-2 text-gray-500">No recent orders.</p>
+          <h3 className="text-xl font-semibold">Recent Restock Orders</h3>
+          {restockOrders.length === 0 ? (
+            <p className="mt-2 text-gray-500">No Restock orders.</p>
           ) : (
             <ul className="mt-3 space-y-2">
-              {orders.slice(0, 6).map(o => (
-                <li key={o.id} className="p-3 border rounded flex justify-between">
+              {restockOrders.slice(0, 6).map((o,index) => (
+                <li key={index} className="p-3 border rounded flex justify-between">
                   <div>
-                    <div className="font-medium">{o.id} • {o.sku}</div>
-                    <div className="text-sm text-gray-500">{o.type} • Qty: {o.qty} • {o.status}</div>
+                    <div className="font-medium">{inventory.find(i => i.sku === o.sku).name} • {o.sku}</div>
+                    <div className="text-sm text-gray-500">{o.type} • Qty: {o.qty} •Priority <span className="font-bold">{Priorities[o.priority]}</span></div>
                   </div>
-                  <div className="text-sm text-gray-400">{new Date(o.createdAt).toLocaleString()}</div>
+                  <div className="text-sm text-gray-400">{o.date}</div>
                 </li>
               ))}
             </ul>
@@ -72,12 +123,12 @@ const Dashboard = ({ inventory = sampleInventory, orders = sampleOrders }) => {
           <h3 className="text-xl font-semibold">Warehouse Trends</h3>
           <div className="mt-3">
             {/* Simple aggregated incoming vs outgoing chart (text + bars) */}
-            <div className="text-sm text-gray-500">Incoming vs Outgoing (last 30 days)</div>
+            <div className="text-sm text-gray-500">Incoming vs Outgoing </div>
             <div className="mt-2">
               {/* build sample aggregates from orders */}
               {(() => {
-                const incoming = orders.filter(o => o.type === 'restock').reduce((s, o) => s + (o.qty || 0), 0)
-                const outgoing = orders.filter(o => o.type === 'outgoing').reduce((s, o) => s + (o.qty || 0), 0)
+                const incoming = restockOrders.reduce((s, o) => s + (o.qty || 0), 0)
+                const outgoing = outgoingOrders.reduce((s, o) => s + (o.qty || 0), 0)
                 const max = Math.max(1, incoming, outgoing)
                 const incPct = Math.round((incoming / max) * 100)
                 const outPct = Math.round((outgoing / max) * 100)
@@ -104,7 +155,7 @@ const Dashboard = ({ inventory = sampleInventory, orders = sampleOrders }) => {
               <div className="text-sm text-gray-500">Top low-stock SKUs</div>
               {(() => {
                 const low = inventory
-                  .filter(i => (i.quantity ?? 0) <= (i.reorderPoint ?? 0))
+                  .filter(i => (i.quantity ?? 0) <= (i.reorder ?? 0))
                   .sort((a, b) => a.quantity - b.quantity)
                   .slice(0, 5)
                 if (low.length === 0) return <div className="mt-2 text-gray-500">All SKUs healthy</div>
@@ -125,3 +176,7 @@ const Dashboard = ({ inventory = sampleInventory, orders = sampleOrders }) => {
 }
 
 export default Dashboard
+
+
+
+
