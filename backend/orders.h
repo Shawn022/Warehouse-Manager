@@ -5,6 +5,7 @@
 
 struct Reorder{
     int priority;
+    int id;
     char sku[20];
     int qty;
     int eta;
@@ -12,9 +13,10 @@ struct Reorder{
 };
 struct Order{
     int priority;
+    int id;
     char sku[20];
     int qty;
-    char destination[100];
+    char destination[50];
     char date[25];
 };
 struct orderQueueNode{
@@ -39,6 +41,7 @@ struct orderQueueNode* newOrderNode(struct Order order);
 struct orderQueue* createOrderQueue();
 void enqueueOrder(struct orderQueue* q, struct Order order);
 void dequeueOrder(struct orderQueue* q);
+struct Order peekOrder(struct orderQueue* q);
 char* getOrderQueueJSON(struct orderQueue* q);
 
 
@@ -46,6 +49,7 @@ struct reorderQueueNode* newReorderNode(struct Reorder reorder);
 struct reorderQueue* createReorderQueue();
 void enqueueReorder(struct reorderQueue* q, struct Reorder reorder);
 void dequeueReorder(struct reorderQueue* q);
+struct Reorder peekReorder(struct reorderQueue* q);
 char* getReorderQueueJSON(struct reorderQueue* q);
 
 #endif // ORDERS_H

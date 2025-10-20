@@ -1,55 +1,56 @@
 import React, { useState, useEffect } from 'react'
 
 const Orders = () => {
-  const [tab, setTab] = useState('restock')
+  const [tab, setTab] = useState('outgoing')
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const maxLimit = 200; //max SKUs in one division
-  const Priorities=["","Low","Medium","High"]
+  const Priorities = ["", "Low", "Medium", "High"]
 
   const [restockOrders, setRestockOrders] = useState([])
   const [outgoingOrders, setOutgoingOrders] = useState([])
 
-  const [restockForm, setRestockForm] = useState({ sku: '', qty: 0, etaDays: 7 })
-  const [outgoingForm, setOutgoingForm] = useState({ sku: '', qty: 0, destination: '' })
+  const [restockForm, setRestockForm] = useState({ sku: '', qty: 0, priority: 1, etaDays: 7, date: "" })
+  const [outgoingForm, setOutgoingForm] = useState({ sku: '', qty: 0, priority: 1, destination: '', date: "" })
 
+
+  const loaditems = async () => {
+    try {
+      const res = await fetch('http://localhost:8080/inventory')
+      if (!res.ok) throw new Error('Failed to load')
+      const data = await res.json()
+
+      setItems(data)
+      setRestockForm({ sku: data[0]?.sku || '', qty: 0, priority: 1, etaDays: 7, date: "" })
+      setOutgoingForm({ sku: data[0]?.sku || '', qty: 0, priority: 1, destination: '', date: "" })
+    } catch (err) {
+      console.error('Failed to load items for map:', err)
+    }
+  }
+  const loadOrders = async () => {
+    try {
+      const res = await fetch('http://localhost:8080/orders')
+      if (!res.ok) throw new Error('Failed to load')
+      const data = await res.json()
+      setOutgoingOrders(data || [])
+    } catch (err) {
+      console.error('Failed to load orders:', err)
+    }
+  }
+  const loadReorders = async () => {
+    try {
+      const res = await fetch('http://localhost:8080/reorders')
+      if (!res.ok) throw new Error('Failed to load')
+      const data = await res.json()
+      setRestockOrders(data || [])
+    } catch (err) {
+      console.error('Failed to load reorders:', err)
+    }
+  }
 
   useEffect(() => {
     setLoading(true)
-    const loaditems = async () => {
-      try {
-        const res = await fetch('http://localhost:8080/inventory')
-        if (!res.ok) throw new Error('Failed to load')
-        const data = await res.json()
 
-        setItems(data)
-        setRestockForm({ sku: data[0]?.sku || '', qty: 0, etaDays: 7 })
-        setOutgoingForm({ sku: data[0]?.sku || '', qty: 0, destination: '' })
-      } catch (err) {
-        console.error('Failed to load items for map:', err)
-      }
-    }
-    const loadOrders = async () => {
-      try {
-        const res = await fetch('http://localhost:8080/orders')
-        if (!res.ok) throw new Error('Failed to load')
-        const data = await res.json()
-        setOutgoingOrders(data || [])
-        console.log(data)
-      } catch (err) {
-        console.error('Failed to load orders:', err)
-      }
-    }
-    const loadReorders = async () => {
-      try {
-        const res = await fetch('http://localhost:8080/reorders')
-        if (!res.ok) throw new Error('Failed to load')
-        const data = await res.json()
-        setRestockOrders(data || [])
-      } catch (err) {
-        console.error('Failed to load reorders:', err)
-      }
-    }
 
     loaditems()
     loadOrders()
@@ -58,13 +59,85 @@ const Orders = () => {
   }, [])
 
 
-
-  function createRestock(e) {
+  async function createOutgoing(order) {
+    if (order.qty <= 0 || order.destination == "") return;
+    order.date = (new Date()).toDateString()
+    try {
+      const res = await fetch('http://localhost:8080/orders', {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(order)
+      })
+      if (!res.ok) throw new Error('Failed to create outgoing order')
+      const data = await res.text()
+      loadOrders();
+    } catch (err) {
+      console.error('Failed to create outgoing order:', err)
+    }
 
   }
 
-  function createOutgoing(e) {
+  async function createRestock(reorder) {
+    if (reorder.qty <= 0) return;
+    reorder.date = (new Date()).toDateString()
+    try {
+      const res = await fetch('http://localhost:8080/reorders', {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(reorder)
+      })
+      if (!res.ok) throw new Error('Failed to create outgoing order')
+      const data = await res.text()
+      loadReorders();
+    } catch (err) {
+      console.error('Failed to create outgoing order:', err)
+    }
+  }
 
+  async function restockOrder(approve) {
+    try {
+      const res = await fetch(`http://localhost:8080/reorders/${approve ? 'approve' : 'cancel'}`, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!res.ok) throw new Error('Failed to restock order');
+      const data = await res.json();
+      setRestockOrders(prev => prev.slice(1));
+    } catch (err) {
+      console.error('Failed to restock order:', err);
+    }
+    if (approve) {
+      loaditems()
+    }
+  }
+
+  async function outgoingOrder(approve) {
+    try {
+      const res = await fetch(`http://localhost:8080/orders/${approve ? 'approve' : 'cancel'}`, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!res.ok) throw new Error('Failed to restock order');
+      const data = await res.json();
+      setOutgoingOrders(prev => prev.slice(1));
+    } catch (err) {
+      console.error('Failed to restock order:', err);
+    }
+    if (approve) {
+      loaditems()
+    }
   }
 
   function skuLimit(currSku) {
@@ -89,7 +162,7 @@ const Orders = () => {
 
         {tab === 'outgoing' && (
           <div className="mt-4">
-            <form onSubmit={createOutgoing} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+            <form onSubmit={(e) => { e.preventDefault(); createOutgoing(outgoingForm) }} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
               <div>
                 <label className="block text-sm">SKU</label>
                 <select value={outgoingForm.sku} onChange={e => setOutgoingForm({ ...outgoingForm, sku: e.target.value })} className="p-2 border rounded">
@@ -101,11 +174,17 @@ const Orders = () => {
                 <input type="number" value={outgoingForm.qty} min={1} max={items.find(item => item.sku === outgoingForm.sku)?.quantity || 0} onChange={e => setOutgoingForm({ ...outgoingForm, qty: e.target.value })} className="p-2 border rounded" />
               </div>
               <div>
-                <label className="block text-sm">Destination</label>
-                <input type="text" value={outgoingForm.destination} onChange={e => setOutgoingForm({ ...outgoingForm, destination: e.target.value })} className="p-2 border rounded" />
+                <label className="block text-sm">Priority</label>
+                <select value={outgoingForm.priority} onChange={e => setOutgoingForm({ ...outgoingForm, priority: e.target.value })} className="p-2 border rounded">
+                  {[1, 2, 3].map(i => <option key={i} value={i}>{Priorities[i]}</option>)}
+                </select>
               </div>
               <div>
-                <button className="bg-blue-600 text-white px-4 py-2 rounded">Create Outgoing</button>
+                <label className="block text-sm">Destination</label>
+                <input required type="text" value={outgoingForm.destination} onChange={e => setOutgoingForm({ ...outgoingForm, destination: e.target.value })} className="p-2 border rounded" />
+              </div>
+              <div>
+                <button className="bg-blue-600 hover:bg-blue-800 text-white px-4 py-2 rounded">Create Outgoing</button>
               </div>
             </form>
 
@@ -114,14 +193,18 @@ const Orders = () => {
               {outgoingOrders.length === 0 ? (
                 <p className="mt-2 text-gray-500">No outgoing orders yet.</p>
               ) : (
-                <ul className="mt-3 space-y-2 overflow-scroll" style={{maxHeight: '350px'}}>
+                <ul className="mt-3 space-y-2 overflow-scroll" style={{ maxHeight: '310px' }}>
                   {outgoingOrders.map((o, index) => (
                     <li key={index} className="p-3 bg-white rounded shadow-sm flex justify-between">
                       <div>
                         <div className="font-medium">{o.sku}</div>
-                        <div className="text-sm text-gray-500">Qty: {o.qty} • Destination: {o.destination} • Status: {o.status}</div>
+                        <div className="text-sm text-gray-500">Qty: {o.qty} • Destination: {o.destination} • Priority: <span className="font-bold">{Priorities[o.priority]}</span></div>
                       </div>
-                      <div className="text-sm text-gray-400">{o.date}</div>
+                      <div className="text-right flex gap-3 items-end">
+                        {index === 0 && <><button className="bg-green-500 hover:bg-green-700 text-white px-2 py-1 rounded" onClick={() => outgoingOrder(true)}>Approve</button>
+                          <button className="bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded" onClick={() => outgoingOrder(false)}>Cancel</button></>}
+                        <div className="text-sm text-gray-400">{o.date}</div>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -129,9 +212,10 @@ const Orders = () => {
             </div>
           </div>
         )}
+
         {tab === 'restock' && (
           <div className="mt-4">
-            <form onSubmit={createRestock} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+            <form onSubmit={(e) => { e.preventDefault(); createRestock(restockForm) }} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
               <div>
                 <label className="block text-sm">SKU</label>
                 <select value={restockForm.sku} onChange={e => setRestockForm({ ...restockForm, sku: e.target.value })} className="p-2 border rounded">
@@ -143,11 +227,17 @@ const Orders = () => {
                 <input type="number" value={restockForm.qty} min={0} max={skuLimit(restockForm.sku)} onChange={e => setRestockForm({ ...restockForm, qty: e.target.value })} className="p-2 border rounded" />
               </div>
               <div>
-                <label className="block text-sm">ETA (days)</label>
-                <input type="number" value={restockForm.etaDays} min={0} onChange={e => setRestockForm({ ...restockForm, etaDays: e.target.value })} className="p-2 border rounded" />
+                <label className="block text-sm">Priority</label>
+                <select value={restockForm.priority} onChange={e => setRestockForm({ ...restockForm, priority: e.target.value })} className="p-2 border rounded">
+                  {[1, 2, 3].map(i => <option key={i} value={i}>{Priorities[i]}</option>)}
+                </select>
               </div>
               <div>
-                <button className="bg-green-600 text-white px-4 py-2 rounded">Create PO</button>
+                <label className="block text-sm">ETA (days)</label>
+                <input required type="number" value={restockForm.etaDays} min={0} onChange={e => setRestockForm({ ...restockForm, etaDays: e.target.value })} className="p-2 border rounded" />
+              </div>
+              <div>
+                <button className="bg-green-600 hover:bg-green-800 text-white px-4 py-2 rounded">Create PO</button>
               </div>
             </form>
 
@@ -156,14 +246,18 @@ const Orders = () => {
               {restockOrders.length === 0 ? (
                 <p className="mt-2 text-gray-500">No restock orders yet.</p>
               ) : (
-                <ul className="mt-3 space-y-2 overflow-scroll" style={{maxHeight: '350px'}}>
+                <ul className="mt-3 space-y-2 overflow-scroll" style={{ maxHeight: '310px' }}>
                   {restockOrders.map((o, index) => (
                     <li key={index} className="p-3 bg-white rounded shadow-sm flex justify-between">
                       <div>
                         <div className="font-medium">{o.sku}</div>
-                        <div className="text-sm text-gray-500">Qty: {o.qty} • ETA: {o.eta} days • Priority: {Priorities[o.priority]}</div>
+                        <div className="text-sm text-gray-500">Qty: {o.qty} • ETA: {o.eta} days • Priority: <span className="font-bold">{Priorities[o.priority]}</span></div>
                       </div>
-                      <div className="text-sm text-gray-400">{o.date}</div>
+                      <div className="text-right flex gap-3 items-end">
+                        {index === 0 && <><button className="bg-green-500 hover:bg-green-700 text-white px-2 py-1 rounded" onClick={() => restockOrder(true)}>Approve</button>
+                          <button className="bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded" onClick={() => restockOrder(false)}>Cancel</button></>}
+                        <div className="text-sm text-gray-400">{o.date}</div>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -171,6 +265,7 @@ const Orders = () => {
             </div>
           </div>
         )}
+
         {tab === 'new-item' && (
           <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
             <h3 className="text-2xl font-semibold">Add New Inventory Item</h3>

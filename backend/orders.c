@@ -19,6 +19,7 @@ struct orderQueue* createOrderQueue(){
     return q;
 }
 void enqueueOrder(struct orderQueue* q, struct Order order ){
+    if(order.priority<=0) return;
     struct orderQueueNode* temp=newOrderNode(order);
     if(!q->front && !q->rear){
         q->front=temp;
@@ -47,6 +48,13 @@ void dequeueOrder(struct orderQueue* q){
         q->rear=NULL;
     }
     free(temp);
+}
+struct Order peekOrder(struct orderQueue* q){
+    if(!q->front){
+        struct Order emptyOrder={0};
+        return emptyOrder;
+    }
+    return q->front->order;
 }
 char* getOrderQueueJSON(struct orderQueue* q){
     if(!q->front){
@@ -96,6 +104,7 @@ struct reorderQueue* createReorderQueue(){
     return q;
 }
 void enqueueReorder(struct reorderQueue* q,struct Reorder reorder){
+    if(reorder.priority<=0) return;
     struct reorderQueueNode* temp=newReorderNode(reorder);
     if(!q->front && !q->rear){
         q->front=temp;
@@ -125,6 +134,14 @@ void dequeueReorder(struct reorderQueue* q){
     }
     free(temp);
 }
+struct Reorder peekReorder(struct reorderQueue* q){
+    if(!q->front){
+        struct Reorder temp={0};
+        return temp;
+    }
+    return q->front->reorder;
+}
+
 char* getReorderQueueJSON(struct reorderQueue* q){
     if(!q->front){
         char* emptyJson=(char*)malloc(20*sizeof(char));

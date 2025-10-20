@@ -13,6 +13,7 @@ const Logistics = () => {
   const [loading, setLoading] = React.useState();
   const [outgoingOrders, setOutgoingOrders] = React.useState([]);
   const [restockOrders, setRestockOrders] = React.useState([]);
+  const [error, setError] = React.useState(false);
 
   React.useEffect(() => {
     const loadData = async () => {
@@ -23,6 +24,7 @@ const Logistics = () => {
         setInventory(data);
       } catch (err) {
         console.error('Failed to fetch inventory data:', err);
+        setError(true);
       } finally {
         setLoading(false);
       }
@@ -36,6 +38,7 @@ const Logistics = () => {
         console.log(data)
       } catch (err) {
         console.error('Failed to load orders:', err)
+        setError(true);
       }
     }
     const loadReorders = async () => {
@@ -46,6 +49,7 @@ const Logistics = () => {
         setRestockOrders(data || [])
       } catch (err) {
         console.error('Failed to load reorders:', err)
+        setError(true);
       }
     }
 
@@ -60,7 +64,7 @@ const Logistics = () => {
     const totalUnits = inventory.reduce((s, it) => s + (it.quantity || 0), 0)
     const lowStock = inventory.filter(it => (it.quantity ?? 0) <= (it.reorder ?? 0))
     const incomingStock = restockOrders.reduce((s, order) => s + (order.qty || 0), 0) || 0
-    const incomingStockPrice= restockOrders.reduce((s, order) => {
+    const incomingStockPrice = restockOrders.reduce((s, order) => {
       const item = inventory.find(it => it.sku === order.sku)
       return s + ((item?.price || 0) * (order.qty || 0))
     }, 0) || 0
@@ -77,6 +81,10 @@ const Logistics = () => {
 
   if (loading) {
     return <div className="loader"></div>
+  }
+
+  if (error) {
+    return <div className="error">Failed to load data</div>
   }
 
   return (
