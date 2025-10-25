@@ -149,6 +149,7 @@ const Inventory = () => {
   return (
     <div>
       <div className="flex items-center justify-between">
+        <h1>sfafui</h1>
         <h2 className="text-4xl font-bold">Inventory</h2>
         <div className="flex gap-2">
           <button className="bg-gray-200 px-3 py-1 rounded" onClick={() => downloadCSV('inventory.csv', items)}>Export CSV</button>
