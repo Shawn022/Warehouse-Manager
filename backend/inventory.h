@@ -29,6 +29,7 @@ int hashFunction(struct hashTable* table,int key);
 void insertItem(struct hashTable* table,struct Item value);
 void updateItem(struct hashTable* table,struct Item value);
 int removeItem(struct hashTable* table,int key);
+struct hashTable* loadTableData();
 char* getInventoryJSON(struct hashTable* table);
 
 #endif // INVENTORY_H

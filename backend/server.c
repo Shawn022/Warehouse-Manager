@@ -298,19 +298,12 @@ int main()
 
     printf("Server running on http://localhost:8080\n");
 
-    struct hashTable *table = createTable(10);
-    // Sample items
-    struct Item item1 = {100, "A-100", "ToothBrushes", 120, 9.99, 50};
-    struct Item item2 = {200, "B-200", "ToothPaste", 80, 19.99, 20};
-    struct Item item3 = {300, "C-300", "MouthWash", 45, 14.99, 40};
-    insertItem(table, item1);
-    insertItem(table, item2);
-    insertItem(table, item3);
+    struct hashTable *table = loadTableData();
 
     struct orderQueue *orderQ = createOrderQueue();
     struct reorderQueue *reorderQ = createReorderQueue();
 
-    // ---- sample orders - enqueued at server start for testing (5 each) ----
+    // SAMPLE ORDERS FOR TESTING
     struct Order o1 = {3, 100, "A-100", 5, "Dock A", "2025-10-18"};
     enqueueOrder(orderQ, o1);
     struct Order o2 = {2, 200, "B-200", 3, "Dock B", "2025-10-18"};
@@ -322,7 +315,7 @@ int main()
     struct Order o5 = {2, 300, "C-300", 1, "Retail", "2025-10-21"};
     enqueueOrder(orderQ, o5);
 
-    // sample reorders (priority-ordered) - 5 entries
+    // sample reorders - FOR TESTING==============
     struct Reorder r1 = {3, 100, "A-100", 50, 7, "2025-10-25"};
     enqueueReorder(reorderQ, r1);
     struct Reorder r2 = {3, 100, "A-100", 30, 10, "2025-10-26"};

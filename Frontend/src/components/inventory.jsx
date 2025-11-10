@@ -160,7 +160,7 @@ const Inventory = () => {
         <input placeholder="Search SKU, name" value={query} onChange={e => setQuery(e.target.value)} className="p-2 border rounded w-full md:w-1/2" />
       </div>
 
-      <div className="item-container p-3 bg-green-50 rounded-lg mt-4">
+      <div className="item-container overflow-scroll max-h-131.5 p-3 bg-green-50 rounded-lg mt-4">
         {filtered.length === 0 ? (
           <div className="p-4 text-gray-600">No items found.</div>
         ) : (

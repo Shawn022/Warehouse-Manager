@@ -162,7 +162,7 @@ const Orders = () => {
 
         {tab === 'outgoing' && (
           <div className="mt-4">
-            <form onSubmit={(e) => { e.preventDefault(); createOutgoing(outgoingForm) }} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+            <form onSubmit={(e) => { e.preventDefault(); createOutgoing(outgoingForm) }} className="flex justify-between items-end">
               <div>
                 <label className="block text-sm">SKU</label>
                 <select value={outgoingForm.sku} onChange={e => setOutgoingForm({ ...outgoingForm, sku: e.target.value })} className="p-2 border rounded">
@@ -215,7 +215,7 @@ const Orders = () => {
 
         {tab === 'restock' && (
           <div className="mt-4">
-            <form onSubmit={(e) => { e.preventDefault(); createRestock(restockForm) }} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+            <form onSubmit={(e) => { e.preventDefault(); createRestock(restockForm) }} className="flex justify-between items-end">
               <div>
                 <label className="block text-sm">SKU</label>
                 <select value={restockForm.sku} onChange={e => setRestockForm({ ...restockForm, sku: e.target.value })} className="p-2 border rounded">
