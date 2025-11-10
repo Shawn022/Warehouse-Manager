@@ -120,7 +120,7 @@ const Map = ({ onSelect }) => {
                                 <button onClick={() => { setSelected(null); if (onSelect) onSelect(null) }} className="px-3 py-1 bg-gray-200 rounded">Clear</button>
                             </div>
 
-                            <div className="mt-3">
+                            <div className="mt-3 overflow-scroll max-h-96">
                                 {filterItems(selected).length === 0 ? (
                                     <div className="text-sm text-gray-600">No items in this division.</div>
                                 ) : (

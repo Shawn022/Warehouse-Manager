@@ -101,7 +101,7 @@ const loadReorders = async () => {
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="col-span-2 bg-white p-4 rounded shadow-sm">
-          <h3 className="text-xl font-semibold">Recent Restock Orders</h3>
+          <h3 className="text-xl font-semibold">Top Restock Orders</h3>
           {restockOrders.length === 0 ? (
             <p className="mt-2 text-gray-500">No Restock orders.</p>
           ) : (
