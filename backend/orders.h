@@ -43,6 +43,8 @@ void enqueueOrder(struct orderQueue* q, struct Order order);
 void dequeueOrder(struct orderQueue* q);
 struct Order peekOrder(struct orderQueue* q);
 char* getOrderQueueJSON(struct orderQueue* q);
+struct orderQueue* loadOrderQueue();
+void saveOrders(struct orderQueue* q);
 
 
 struct reorderQueueNode* newReorderNode(struct Reorder reorder);
@@ -51,5 +53,7 @@ void enqueueReorder(struct reorderQueue* q, struct Reorder reorder);
 void dequeueReorder(struct reorderQueue* q);
 struct Reorder peekReorder(struct reorderQueue* q);
 char* getReorderQueueJSON(struct reorderQueue* q);
+struct reorderQueue* loadReorderQueue();
+void saveReorders(struct reorderQueue* q);
 
 #endif // ORDERS_H

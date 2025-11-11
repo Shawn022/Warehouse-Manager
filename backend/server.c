@@ -276,6 +276,9 @@ void handle_post(SOCKET client, const char *path, const char *body, struct hashT
     {
         send_response(client, "{\"error\":\"Invalid endpoint\"}");
     }
+    writeWarehouseItems(table);
+    saveOrders(orderQ);
+    saveReorders(reorderQ);
 }
 
 int main()
@@ -300,32 +303,8 @@ int main()
 
     struct hashTable *table = loadTableData();
 
-    struct orderQueue *orderQ = createOrderQueue();
-    struct reorderQueue *reorderQ = createReorderQueue();
-
-    // SAMPLE ORDERS FOR TESTING
-    struct Order o1 = {3, 100, "A-100", 5, "Dock A", "2025-10-18"};
-    enqueueOrder(orderQ, o1);
-    struct Order o2 = {2, 200, "B-200", 3, "Dock B", "2025-10-18"};
-    enqueueOrder(orderQ, o2);
-    struct Order o3 = {1, 300, "C-300", 10, "Outbound 1", "2025-10-19"};
-    enqueueOrder(orderQ, o3);
-    struct Order o4 = {3, 300, "C-300", 2, "Outbound 2", "2025-10-20"};
-    enqueueOrder(orderQ, o4);
-    struct Order o5 = {2, 300, "C-300", 1, "Retail", "2025-10-21"};
-    enqueueOrder(orderQ, o5);
-
-    // sample reorders - FOR TESTING==============
-    struct Reorder r1 = {3, 100, "A-100", 50, 7, "2025-10-25"};
-    enqueueReorder(reorderQ, r1);
-    struct Reorder r2 = {3, 100, "A-100", 30, 10, "2025-10-26"};
-    enqueueReorder(reorderQ, r2);
-    struct Reorder r3 = {2, 200, "B-200", 40, 14, "2025-11-01"};
-    enqueueReorder(reorderQ, r3);
-    struct Reorder r4 = {2, 200, "B-200", 25, 21, "2025-11-08"};
-    enqueueReorder(reorderQ, r4);
-    struct Reorder r5 = {1, 300, "C-300", 15, 30, "2025-11-20"};
-    enqueueReorder(reorderQ, r5);
+    struct orderQueue *orderQ = loadOrderQueue();
+    struct reorderQueue *reorderQ = loadReorderQueue();
 
     while (1)
     {

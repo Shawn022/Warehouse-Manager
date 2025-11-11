@@ -75,6 +75,49 @@ struct Order peekOrder(struct orderQueue *q)
     }
     return q->front->order;
 }
+struct orderQueue* loadOrderQueue(){
+    struct orderQueue *q=createOrderQueue();
+    FILE* f1=fopen("saves/orders.bin","rb");
+    if(!f1)return q;
+    int size=100,count=0;
+    struct Order *arr=(struct Order*)malloc(sizeof(struct Order)*size);
+    if(!arr){
+        fclose(f1);
+        return q;
+    }
+    while(1){
+        if(count>=size){
+            struct Order *tmp = (struct Order *)realloc(arr, sizeof(struct Order) * size*2);
+            if (!tmp)
+            {
+                // realloc failed, stop reading further
+                break;
+            }
+            arr = tmp;
+            size = size *2;
+        }
+        size_t read = fread(&arr[count], sizeof(struct Order), 1, f1);
+        if (read != 1)
+            break;
+        count++;
+    }
+    for(int i=0;i<count;i++){
+        enqueueOrder(q,arr[i]);
+    }
+    free(arr);
+    fclose(f1);
+    return q;
+}
+void saveOrders(struct orderQueue* q){
+    if(!q->front)return;
+    struct orderQueueNode* curr=q->front;
+    FILE* f1=fopen("saves/orders.bin","wb");
+    while(curr){
+        fwrite(&(curr->order),sizeof(struct Order),1,f1);
+        curr=curr->next;
+    }
+    fclose(f1);
+}
 char *getOrderQueueJSON(struct orderQueue *q)
 {
     if (!q->front)
@@ -181,6 +224,49 @@ struct Reorder peekReorder(struct reorderQueue *q)
         return temp;
     }
     return q->front->reorder;
+}
+struct reorderQueue* loadReorderQueue(){
+    struct reorderQueue *q=createReorderQueue();
+    FILE* f1=fopen("saves/reorders.bin","rb");
+    if(!f1)return q;
+    int size=100,count=0;
+    struct Reorder *arr=(struct Reorder*)malloc(sizeof(struct Reorder)*size);
+    if(!arr){
+        fclose(f1);
+        return q;
+    }
+    while(1){
+        if(count>=size){
+            struct Reorder *tmp = (struct Reorder *)realloc(arr, sizeof(struct Reorder) * size*2);
+            if (!tmp)
+            {
+                // realloc failed, stop reading further
+                break;
+            }
+            arr = tmp;
+            size = size *2;
+        }
+        size_t read = fread(&arr[count], sizeof(struct Reorder), 1, f1);
+        if (read != 1)
+            break;
+        count++;
+    }
+    for(int i=0;i<count;i++){
+        enqueueReorder(q,arr[i]);
+    }
+    free(arr);
+    fclose(f1);
+    return q;
+}
+void saveReorders(struct reorderQueue* q){
+    if(!q->front)return;
+    struct reorderQueueNode* curr=q->front;
+    FILE* f1=fopen("saves/reorders.bin","wb");
+    while(curr){
+        fwrite(&(curr->reorder),sizeof(struct Reorder),1,f1);
+        curr=curr->next;
+    }
+    fclose(f1);
 }
 
 char *getReorderQueueJSON(struct reorderQueue *q)
