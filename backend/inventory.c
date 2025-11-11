@@ -49,6 +49,7 @@ void insertItem(struct hashTable *table, struct Item value)
         }
         curr->next = new;
     }
+    
 }
 void updateItem(struct hashTable *table, struct Item value)
 {
@@ -64,6 +65,7 @@ void updateItem(struct hashTable *table, struct Item value)
         curr = curr->next;
     }
     printf("Item with key %d not found for update\n", value.id);
+    
 }
 int removeItem(struct hashTable *table, int key)
 {
@@ -100,7 +102,7 @@ struct hashTable *loadTableData()
 {
     struct hashTable *table = createTable(10);
 
-    FILE *f1 = fopen("inventory.bin", "rb");
+    FILE *f1 = fopen("saves/inventory.bin", "rb");
     if (!f1)
     {
         // No existing data, return empty table
@@ -165,4 +167,15 @@ char* getInventoryJSON(struct hashTable* table){
     }
     strcat(jsonStr,"]");
     return jsonStr;
+}
+void writeWarehouseItems(struct hashTable* table){
+    FILE* f1=fopen("saves/inventory.bin","wb");
+    for(int i=0;i<table->size;i++){
+        struct node* curr=table->arr[i];
+        while(curr){
+            fwrite(&(curr->value),sizeof(struct Item),1,f1);
+            curr=curr->next;
+        }
+    }
+    fclose(f1);
 }
