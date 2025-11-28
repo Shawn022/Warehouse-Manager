@@ -120,11 +120,6 @@ void handle_post(SOCKET client, const char *path, const char *body, struct hashT
     {
         printf("POST body: %s\n", body);
         struct Item newItem;
-        memset(&newItem, 0, sizeof(newItem));
-        newItem.id = 0;
-        newItem.quantity = 0;
-        newItem.price = 0.0f;
-        newItem.reorder = 0;
 
         sscanf(body, "{\"sku\":\"%19[^\"]\",\"name\":\"%49[^\"]\",\"quantity\":%d,\"price\":%f,\"reorder\":%d,\"id\":%d}",
                newItem.sku, newItem.name, &newItem.quantity, &newItem.price, &newItem.reorder, &newItem.id);
@@ -162,11 +157,6 @@ void handle_post(SOCKET client, const char *path, const char *body, struct hashT
     {
         printf("POST body: %s\n", body);
         struct Item updatedItem;
-        memset(&updatedItem, 0, sizeof(updatedItem));
-        updatedItem.id = 0;
-        updatedItem.quantity = 0;
-        updatedItem.price = 0.0f;
-        updatedItem.reorder = 0;
 
         sscanf(body, "{\"id\":%d,\"sku\":\"%19[^\"]\",\"name\":\"%49[^\"]\",\"quantity\":%d,\"price\":%f,\"reorder\":%d}",
                &updatedItem.id, updatedItem.sku, updatedItem.name, &updatedItem.quantity, &updatedItem.price, &updatedItem.reorder);
@@ -190,7 +180,6 @@ void handle_post(SOCKET client, const char *path, const char *body, struct hashT
                newOrder.sku, &newOrder.qty, &newOrder.priority, &newOrder.eta, newOrder.date);
 
         enqueueReorder(reorderQ, newOrder);
-        printf("\n%d", newOrder.priority);
         send_response(client, "{\"status\":\"Order Added in Queue\"}");
     }
     else if (strcmp(path, "/reorders/approve") == 0)
