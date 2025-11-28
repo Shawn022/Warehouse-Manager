@@ -32,7 +32,7 @@ int main()
 
     struct Item warehouseItems[] = {
         // 🧴 Section A – Personal Care
-        {100, "A-100", "ToothBrushes", 120, 9.99, 50},
+        {100, "A-100", "ToothBrushes", 40, 9.99, 50},
         {101, "A-101", "ToothPaste", 80, 19.99, 20},
         {102, "A-102", "MouthWash", 35, 14.99, 40},
         {103, "A-103", "Shampoo", 150, 49.99, 30},

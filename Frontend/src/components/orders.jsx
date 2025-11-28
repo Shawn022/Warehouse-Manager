@@ -4,7 +4,7 @@ const Orders = () => {
   const [tab, setTab] = useState('outgoing')
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
-  const maxLimit = 200; //max SKUs in one division
+  const maxLimit = 1000; //max SKUs in one division
   const Priorities = ["", "Low", "Medium", "High"]
 
   const [restockOrders, setRestockOrders] = useState([])

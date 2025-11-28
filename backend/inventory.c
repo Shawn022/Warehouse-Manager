@@ -163,7 +163,7 @@ char* getInventoryJSON(struct hashTable* table){
         }
     }
     if(strlen(jsonStr)>1){
-        jsonStr[strlen(jsonStr)-1]='\0'; // Remove last comma
+        jsonStr[strlen(jsonStr)-1]='\0'; 
     }
     strcat(jsonStr,"]");
     return jsonStr;

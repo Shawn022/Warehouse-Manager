@@ -106,7 +106,7 @@ const loadReorders = async () => {
             <p className="mt-2 text-gray-500">No Restock orders.</p>
           ) : (
             <ul className="mt-3 space-y-2">
-              {restockOrders.slice(0, 6).map((o,index) => (
+              {restockOrders.slice(0, 5).map((o,index) => (
                 <li key={index} className="p-3 border rounded flex justify-between">
                   <div>
                     <div className="font-medium">{inventory.find(i => i.sku === o.sku).name} • {o.sku}</div>
